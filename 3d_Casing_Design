@@ -1,0 +1,68 @@
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
+from matplotlib.animation import FuncAnimation
+
+# Function to create a cylinder
+def create_cylinder(ax, radius, height, z_start, color, alpha):
+    z = np.linspace(z_start, z_start + height, 50)
+    theta = np.linspace(0, 2.0 * np.pi, 50)
+    theta_grid, z_grid = np.meshgrid(theta, z)
+    x_grid = radius * np.cos(theta_grid)
+    y_grid = radius * np.sin(theta_grid)
+    ax.plot_surface(x_grid, y_grid, z_grid, color=color, alpha=alpha, edgecolor='none')
+
+# Set up the figure and 3D axes
+fig = plt.figure(figsize=(10, 8))
+ax = fig.add_subplot(111, projection='3d')
+
+# Parameters for the different casings
+casing_params = [
+    {'radius': 1.5, 'height': 100, 'color': 'grey', 'alpha': 1.0, 'label': 'Conductor Casing', 'note': 'Usage: Supports the well structure.\nDepth: 0-100 ft'},
+    {'radius': 1.2, 'height': 300, 'color': 'blue', 'alpha': 1.0, 'label': 'Surface Casing', 'note': 'Usage: Protects freshwater zones.\nDepth: 100-400 ft'},
+    {'radius': 1.0, 'height': 800, 'color': 'green', 'alpha': 1.0, 'label': 'Intermediate Casing', 'note': 'Usage: Isolates formations.\nDepth: 400-1200 ft'},
+    {'radius': 0.8, 'height': 1200, 'color': 'yellow', 'alpha': 1.0, 'label': 'Production Casing', 'note': 'Usage: Production conduit.\nDepth: 1200-2400 ft'},
+    {'radius': 0.6, 'height': 500, 'color': 'red', 'alpha': 1.0, 'label': 'Liner Casing', 'note': 'Usage: Extends production zone.\nDepth: 2400-2900 ft'},
+]
+
+
+# Initialize the plot with empty plots and text annotations
+plots = []
+
+def init():
+    for _ in casing_params:
+        plot = ax.plot([], [], [], color='w')
+        plots.append(plot)
+    return plots
+
+# Animation function to update the plot
+def update(frame):
+    ax.clear()
+    # Set labels and title again as they are cleared during update
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Depth')
+    ax.set_title('3D Visualization of Oil and Gas Well Casing', y=1.05)
+    
+    z_start = 0
+    for i in range(frame + 1):
+        casing = casing_params[i]
+        create_cylinder(ax, casing['radius'], casing['height'], z_start, casing['color'], casing['alpha'])
+        z_start += casing['height']
+    
+    # Highlight the current casing
+    current_casing = casing_params[frame]
+    create_cylinder(ax, current_casing['radius'], current_casing['height'], 0, 'orange', 0.3)
+    
+    # Display note
+    ax.text2D(0.05, 0.90, current_casing['note'], transform=ax.transAxes, fontsize=12, bbox=dict(facecolor='white', alpha=0.5))
+
+    # Creating a custom legend
+    legend_patches = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=c['color'], markersize=10, label=c['label']) for c in casing_params]
+    ax.legend(handles=legend_patches, loc='best')
+    return plots
+
+# Set up the animation
+ani = FuncAnimation(fig, update, frames=len(casing_params), init_func=init, blit=False, repeat=False)
+# Show the plot
+plt.show()
